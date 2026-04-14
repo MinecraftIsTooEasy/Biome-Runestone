@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 
 public class Config {
-    private static final int CURRENT_CONFIG_VERSION = 2;
+    private static final int CURRENT_CONFIG_VERSION = 3;
     private static final String CONFIG_FILE = "config/biome_runestone.json";
     private static ConfigData data = null;
 
@@ -43,6 +43,9 @@ public class Config {
         int playerBiomeRunegateLockLimit = 8192;
         int playerBiomeRunegateGroupLimit = 64;
         int playerBiomeRunegateUsedHistoryPerGroupLimit = 8192;
+        int teamMaxMembers = 8;
+        int teamMaxPendingInvitesPerLeader = 16;
+        int teamInviteCooldownSeconds = 5;
     }
 
     public static void load() {
@@ -169,6 +172,21 @@ public class Config {
                 } else {
                     shouldRewrite = true;
                 }
+                if (json.has("teamMaxMembers")) {
+                    merged.teamMaxMembers = json.get("teamMaxMembers").getAsInt();
+                } else {
+                    shouldRewrite = true;
+                }
+                if (json.has("teamMaxPendingInvitesPerLeader")) {
+                    merged.teamMaxPendingInvitesPerLeader = json.get("teamMaxPendingInvitesPerLeader").getAsInt();
+                } else {
+                    shouldRewrite = true;
+                }
+                if (json.has("teamInviteCooldownSeconds")) {
+                    merged.teamInviteCooldownSeconds = json.get("teamInviteCooldownSeconds").getAsInt();
+                } else {
+                    shouldRewrite = true;
+                }
             }
 
             migrateToCurrentVersion(merged, loadedVersion);
@@ -235,6 +253,17 @@ public class Config {
         if (loadedVersion < 2) {
             if (configData.randomBiomeRunegateFailureCooldownSeconds <= 0) {
                 configData.randomBiomeRunegateFailureCooldownSeconds = 8;
+            }
+        }
+        if (loadedVersion < 3) {
+            if (configData.teamMaxMembers <= 0) {
+                configData.teamMaxMembers = 8;
+            }
+            if (configData.teamMaxPendingInvitesPerLeader <= 0) {
+                configData.teamMaxPendingInvitesPerLeader = 16;
+            }
+            if (configData.teamInviteCooldownSeconds < 0) {
+                configData.teamInviteCooldownSeconds = 0;
             }
         }
 
@@ -441,6 +470,39 @@ public class Config {
 
     public static int getPlayerBiomeRunegateUsedHistoryPerGroupLimit() {
         return Math.max(128, get().playerBiomeRunegateUsedHistoryPerGroupLimit);
+    }
+
+    public static int getTeamMaxMembers() {
+        int maxMembers = get().teamMaxMembers;
+        if (maxMembers < 2) {
+            return 2;
+        }
+        if (maxMembers > 128) {
+            return 128;
+        }
+        return maxMembers;
+    }
+
+    public static int getTeamMaxPendingInvitesPerLeader() {
+        int maxPending = get().teamMaxPendingInvitesPerLeader;
+        if (maxPending < 1) {
+            return 1;
+        }
+        if (maxPending > 128) {
+            return 128;
+        }
+        return maxPending;
+    }
+
+    public static int getTeamInviteCooldownSeconds() {
+        int cooldownSeconds = get().teamInviteCooldownSeconds;
+        if (cooldownSeconds < 0) {
+            return 0;
+        }
+        if (cooldownSeconds > 300) {
+            return 300;
+        }
+        return cooldownSeconds;
     }
 }
 

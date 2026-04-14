@@ -1,6 +1,7 @@
 package com.github.hahahha.BiomeRunestone;
 
 import com.github.hahahha.BiomeRunestone.command.CommandBiomeRunestoneRune;
+import com.github.hahahha.BiomeRunestone.command.CommandBiomeRunestoneTeam;
 import com.github.hahahha.BiomeRunestone.util.Config;
 import moddedmite.rustedironcore.api.event.Handlers;
 import net.fabricmc.api.ModInitializer;
@@ -18,7 +19,10 @@ public class BiomeRunestone implements ModInitializer {
         Config.load();
         ModResourceManager.addResourcePackDomain(MOD_ID);
         MITEEvents.MITE_EVENT_BUS.register(new EventListen());
-        Handlers.Command.register(event -> event.register(new CommandBiomeRunestoneRune()));
+        Handlers.Command.register(event -> {
+            event.register(new CommandBiomeRunestoneRune());
+            event.register(new CommandBiomeRunestoneTeam());
+        });
     }
 }
 

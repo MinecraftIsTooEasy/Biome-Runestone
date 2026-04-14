@@ -5,6 +5,7 @@ import net.minecraft.NBTTagList;
 import net.minecraft.World;
 import net.minecraft.WorldSavedData;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -354,6 +355,75 @@ public class RunegatePlayerLockData extends WorldSavedData {
         return removed;
     }
 
+    public int transferPlayerLockIdentity(String newCanonicalIdentity, Collection<String> oldIdentityCandidates) {
+        String newIdentity = normalizeIdentityToken(newCanonicalIdentity);
+        if (newIdentity == null) {
+            return 0;
+        }
+        if (oldIdentityCandidates == null || oldIdentityCandidates.isEmpty()) {
+            return 0;
+        }
+
+        HashSet<String> oldNormalized = new HashSet<String>();
+        for (String identity : oldIdentityCandidates) {
+            String normalized = normalizeIdentityToken(identity);
+            if (normalized != null && !normalized.equals(newIdentity)) {
+                oldNormalized.add(normalized);
+            }
+        }
+        if (oldNormalized.isEmpty()) {
+            return 0;
+        }
+
+        boolean changed = false;
+        int moved = 0;
+        ArrayList<String> keys = new ArrayList<String>(this.playerLocks.keySet());
+        for (String key : keys) {
+            if (key == null) {
+                continue;
+            }
+
+            String keyLower = key.toLowerCase(Locale.ROOT);
+            String matchedOld = null;
+            for (String oldIdentity : oldNormalized) {
+                if (keyLower.endsWith(":" + oldIdentity)) {
+                    matchedOld = oldIdentity;
+                    break;
+                }
+            }
+            if (matchedOld == null) {
+                continue;
+            }
+
+            int suffixStart = key.length() - matchedOld.length();
+            if (suffixStart <= 0 || suffixStart > key.length()) {
+                continue;
+            }
+
+            String prefix = key.substring(0, suffixStart);
+            String newKey = prefix + newIdentity;
+            if (newKey.equals(key)) {
+                continue;
+            }
+
+            int[] coordinates = this.playerLocks.get(key);
+            if (coordinates == null || coordinates.length < 3) {
+                continue;
+            }
+
+            this.playerLocks.remove(key);
+            this.playerLocks.remove(newKey);
+            this.playerLocks.put(newKey, new int[]{coordinates[0], coordinates[1], coordinates[2]});
+            changed = true;
+            ++moved;
+        }
+
+        if (changed) {
+            this.markDirty();
+        }
+        return moved;
+    }
+
     public int clearAllPlayerLocks() {
         int removed = this.playerLocks.size();
         if (removed > 0 || !this.checkedPlayerMigrationKeys.isEmpty()) {
@@ -448,6 +518,17 @@ public class RunegatePlayerLockData extends WorldSavedData {
             list.appendTag(keyTag);
         }
         return list;
+    }
+
+    private static String normalizeIdentityToken(String identity) {
+        if (identity == null) {
+            return null;
+        }
+        String trimmed = identity.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        return trimmed.toLowerCase(Locale.ROOT);
     }
 }
 

@@ -10,6 +10,7 @@ import com.github.hahahha.BiomeRunestone.util.RunegateRuntimeAccess;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchMetrics;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchStatsData;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchTuning;
+import com.github.hahahha.BiomeRunestone.util.RunegateTeamData;
 import net.minecraft.BiomeGenBase;
 import net.minecraft.Block;
 import net.minecraft.BlockPortal;
@@ -429,8 +430,10 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
         Set<String> legacyGroupKeys = this.BiomeRunestone$getLegacyRunestoneGroupKeys(runestone);
         String playerIdentity = this.BiomeRunestone$getPlayerIdentity(player);
         Set<String> identityCandidates = this.BiomeRunestone$getPlayerIdentityCandidates(player);
-        String playerLockKey = this.BiomeRunestone$getPlayerLockKey(runestoneGroupKey, playerIdentity);
-        Set<String> legacyPlayerLockKeys = this.BiomeRunestone$getLegacyPlayerLockKeys(legacyGroupKeys, identityCandidates, playerLockKey);
+        String effectiveLockIdentity = this.BiomeRunestone$getEffectivePlayerLockIdentity(world, playerIdentity, identityCandidates);
+        Set<String> lockIdentityCandidates = this.BiomeRunestone$getLockIdentityCandidates(playerIdentity, identityCandidates, effectiveLockIdentity);
+        String playerLockKey = this.BiomeRunestone$getPlayerLockKey(runestoneGroupKey, effectiveLockIdentity);
+        Set<String> legacyPlayerLockKeys = this.BiomeRunestone$getLegacyPlayerLockKeys(legacyGroupKeys, lockIdentityCandidates, playerLockKey);
 
         synchronized (PLAYER_LOCKED_DESTINATION_LOCK) {
             RunegatePlayerLockData saveData = RunegatePlayerLockData.get(world);
@@ -746,6 +749,26 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
         UUID uuid = player.getUniqueIDSilent();
         if (uuid != null) {
             candidates.add(uuid.toString());
+        }
+        return candidates;
+    }
+
+    private String BiomeRunestone$getEffectivePlayerLockIdentity(WorldServer world, String playerIdentity, Set<String> playerIdentityCandidates) {
+        RunegateTeamData teamData = RunegateTeamData.get(world);
+        String teamLeaderIdentity = teamData.getTeamLeader(playerIdentity, playerIdentityCandidates);
+        if (teamLeaderIdentity == null || teamLeaderIdentity.isEmpty()) {
+            return playerIdentity;
+        }
+        return teamLeaderIdentity;
+    }
+
+    private Set<String> BiomeRunestone$getLockIdentityCandidates(String playerIdentity, Set<String> playerIdentityCandidates, String effectiveLockIdentity) {
+        LinkedHashSet<String> candidates = new LinkedHashSet<String>();
+        if (effectiveLockIdentity != null && !effectiveLockIdentity.isEmpty()) {
+            candidates.add(effectiveLockIdentity);
+        }
+        if (effectiveLockIdentity != null && effectiveLockIdentity.equals(playerIdentity) && playerIdentityCandidates != null) {
+            candidates.addAll(playerIdentityCandidates);
         }
         return candidates;
     }

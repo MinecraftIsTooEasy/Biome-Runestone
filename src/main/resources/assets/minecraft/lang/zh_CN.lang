@@ -67,3 +67,76 @@ tile.player_biome_runestone_jungle_river.name=玩家丛林河流符文石
 tile.player_biome_runestone_swamp_river.name=玩家沼泽河流符文石
 
 # Namespaced Fallback
+
+# Team Command Messages
+message.biome_runestone.team.prefix=[群系符文门队伍] %s
+message.biome_runestone.team.usage=用法：%s
+message.biome_runestone.team.usage_hint_1=子命令：create=创建，invite=邀请，accept=接受，deny=拒绝
+message.biome_runestone.team.usage_hint_2=子命令：kick=踢人，transfer=转队长，leave=退队，disband=解散
+message.biome_runestone.team.usage_hint_3=子命令：info=信息，query=队长查询，confirm=二次确认（invite支持离线UUID/离线名字索引）
+message.biome_runestone.team.only_player=该指令只能由玩家使用。
+message.biome_runestone.team.overworld_unavailable=无法访问主世界实例。
+message.biome_runestone.team.already_leader=你已经是队长。
+message.biome_runestone.team.already_in_team=你已经在队伍中。队长=%s
+message.biome_runestone.team.create_failed=创建队伍失败。
+message.biome_runestone.team.created=队伍创建成功，你现在是队长。
+message.biome_runestone.team.create_first=请先创建队伍。
+message.biome_runestone.team.invite_only_leader=只有队长可以邀请玩家。
+message.biome_runestone.team.player_offline=玩家不在线：%s
+message.biome_runestone.team.invite_target_invalid=邀请目标无效：%s（请使用在线玩家名、离线UUID，或已记录的离线玩家名）
+message.biome_runestone.team.invite_self=不能邀请自己。
+message.biome_runestone.team.invite_offline_name_op_only=邀请离线玩家ID失败。
+message.biome_runestone.team.target_in_team=目标玩家已在队伍中。队长=%s
+message.biome_runestone.team.invite_team_full=当前队伍已满（上限=%s），无法继续邀请。
+message.biome_runestone.team.invite_pending_limit=待处理邀请已达上限（上限=%s），请稍后再试。
+message.biome_runestone.team.invite_cooldown=邀请过于频繁，请 %s 秒后再试。
+message.biome_runestone.team.invite_failed=发送邀请失败。
+message.biome_runestone.team.invite_sent=已向 %s 发送邀请，%s 秒后过期。
+message.biome_runestone.team.invite_notify=你收到了来自 %s 的队伍邀请，%s 秒后过期。输入 /biome_runestone_team accept 接受，或输入 /biome_runestone_team deny 拒绝。
+message.biome_runestone.team.invite_sent_offline_uuid=已向离线UUID %s 发送邀请。目标玩家上线后才开始5分钟倒计时。
+message.biome_runestone.team.invite_sent_offline_name=已向离线玩家名 %s 发送邀请。目标玩家上线后才开始5分钟倒计时。
+message.biome_runestone.team.accept_leave_first=请先退出当前队伍，再接受新的邀请。
+message.biome_runestone.team.no_invite=当前没有待处理的队伍邀请。
+message.biome_runestone.team.join_team_full=目标队伍已满（上限=%s），无法加入。
+message.biome_runestone.team.join_failed=加入队伍失败。
+message.biome_runestone.team.joined=已加入队伍。队长=%s
+message.biome_runestone.team.invite_rejected=已拒绝队伍邀请。
+message.biome_runestone.team.kick_only_leader=只有队长可以踢人。
+message.biome_runestone.team.kick_self=不能把自己踢出队伍。
+message.biome_runestone.team.kick_not_same_team=目标不在你的队伍中。
+message.biome_runestone.team.kick_failed=踢人失败，队伍状态可能已变化。
+message.biome_runestone.team.kick_success=已将 %s 踢出队伍。
+message.biome_runestone.team.kick_notify=你已被 %s 踢出队伍。
+message.biome_runestone.team.transfer_only_leader=只有队长可以转移队长。
+message.biome_runestone.team.transfer_self=你已经是队长。
+message.biome_runestone.team.transfer_not_same_team=目标不在你的队伍中。
+message.biome_runestone.team.transfer_failed=转移队长失败，队伍状态可能已变化。
+message.biome_runestone.team.transfer_success=已将队长转移给 %s。
+message.biome_runestone.team.transfer_lock_migrated=已迁移玩家符文门锁点记录：%s
+message.biome_runestone.team.transfer_notify=你现在是队长（由 %s 转移）。
+message.biome_runestone.team.not_in_team=你当前不在任何队伍中。
+message.biome_runestone.team.leader_cannot_leave=队长不能直接退队，请使用 /biome_runestone_team disband 解散队伍。
+message.biome_runestone.team.leave_confirm_prompt=请二次确认退队：/biome_runestone_team leave confirm
+message.biome_runestone.team.confirmation_expired=确认已过期或不存在，请先执行 %s 。
+message.biome_runestone.team.leave_failed=退队失败，队伍状态可能已变化。
+message.biome_runestone.team.left=你已退出队伍。
+message.biome_runestone.team.disband_only_leader=只有队长可以解散队伍。
+message.biome_runestone.team.disband_confirm_prompt=请二次确认解散：/biome_runestone_team disband confirm
+message.biome_runestone.team.disbanded=队伍已解散。移除成员数=%s
+message.biome_runestone.team.info_none=队伍：无
+message.biome_runestone.team.info_pending_invite=待处理邀请，队长=%s
+message.biome_runestone.team.query_only_leader=只有队长可以使用 query 查看队伍详情。
+message.biome_runestone.team.query_title=队长查询结果：
+message.biome_runestone.team.info_role_leader=队伍身份：队长
+message.biome_runestone.team.info_members_count=队员数量：%s
+message.biome_runestone.team.info_member_list=队员列表：%s
+message.biome_runestone.team.info_pending_invites_count=待处理邀请数量：%s
+message.biome_runestone.team.info_pending_invites_list=待处理邀请目标：%s
+message.biome_runestone.team.info_pending_online_invites_count=待激活邀请数量（目标上线后开始计时）：%s
+message.biome_runestone.team.info_role_member=队伍身份：队员
+message.biome_runestone.team.info_leader=队长：%s
+message.biome_runestone.team.team_broadcast_joined=队伍通知：%s 已加入队伍。
+message.biome_runestone.team.team_broadcast_kicked=队伍通知：%s 被 %s 踢出队伍。
+message.biome_runestone.team.team_broadcast_transfer=队伍通知：队长已从 %s 转移给 %s。
+message.biome_runestone.team.team_broadcast_disband=队伍通知：队伍已由 %s 解散。
+message.biome_runestone.team.offline_team_event_notify=你离线期间有 %s 条队伍变更通知，请使用 /biome_runestone_team info 查看最新状态。

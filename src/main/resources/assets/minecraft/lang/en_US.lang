@@ -67,3 +67,76 @@ tile.player_biome_runestone_jungle_river.name=Player Jungle River Runestone
 tile.player_biome_runestone_swamp_river.name=Player Swamp River Runestone
 
 # Namespaced Fallback
+
+# Team Command Messages
+message.biome_runestone.team.prefix=[Biome Runestone Team] %s
+message.biome_runestone.team.usage=Usage: %s
+message.biome_runestone.team.usage_hint_1=Subcommands: create, invite, accept, deny
+message.biome_runestone.team.usage_hint_2=Subcommands: kick, transfer, leave, disband
+message.biome_runestone.team.usage_hint_3=Subcommands: info, query, confirm (invite supports offline UUID/offline-name index)
+message.biome_runestone.team.only_player=This command can only be used by players.
+message.biome_runestone.team.overworld_unavailable=Unable to access overworld instance.
+message.biome_runestone.team.already_leader=You are already the team leader.
+message.biome_runestone.team.already_in_team=You are already in a team. Leader=%s
+message.biome_runestone.team.create_failed=Failed to create team.
+message.biome_runestone.team.created=Team created. You are the leader.
+message.biome_runestone.team.create_first=Create a team first.
+message.biome_runestone.team.invite_only_leader=Only the team leader can invite players.
+message.biome_runestone.team.player_offline=Player is not online: %s
+message.biome_runestone.team.invite_target_invalid=Invalid invite target: %s (use online player name, offline UUID, or cached offline player name)
+message.biome_runestone.team.invite_self=You cannot invite yourself.
+message.biome_runestone.team.invite_offline_name_op_only=Offline-name invite failed.
+message.biome_runestone.team.target_in_team=Target is already in a team. Leader=%s
+message.biome_runestone.team.invite_team_full=Your team is full (limit=%s). Cannot invite more players.
+message.biome_runestone.team.invite_pending_limit=Pending invite limit reached (limit=%s). Try again later.
+message.biome_runestone.team.invite_cooldown=Invite cooldown active. Try again in %s seconds.
+message.biome_runestone.team.invite_failed=Failed to send invite.
+message.biome_runestone.team.invite_sent=Invite sent to %s. Expires in %s seconds.
+message.biome_runestone.team.invite_notify=You received a team invite from %s. Expires in %s seconds. Use /biome_runestone_team accept to join or /biome_runestone_team deny to reject.
+message.biome_runestone.team.invite_sent_offline_uuid=Invite sent to offline UUID %s. The 5-minute countdown starts when that player logs in.
+message.biome_runestone.team.invite_sent_offline_name=Invite sent to offline player name %s. The 5-minute countdown starts when that player logs in.
+message.biome_runestone.team.accept_leave_first=Leave your current team before accepting another invite.
+message.biome_runestone.team.no_invite=No pending team invite.
+message.biome_runestone.team.join_team_full=Target team is full (limit=%s). Cannot join.
+message.biome_runestone.team.join_failed=Failed to join team.
+message.biome_runestone.team.joined=Joined team. Leader=%s
+message.biome_runestone.team.invite_rejected=Team invite rejected.
+message.biome_runestone.team.kick_only_leader=Only the team leader can kick members.
+message.biome_runestone.team.kick_self=You cannot kick yourself.
+message.biome_runestone.team.kick_not_same_team=Target is not in your team.
+message.biome_runestone.team.kick_failed=Kick failed. Team state may have changed.
+message.biome_runestone.team.kick_success=Kicked %s from the team.
+message.biome_runestone.team.kick_notify=You were kicked from the team by %s.
+message.biome_runestone.team.transfer_only_leader=Only the team leader can transfer leadership.
+message.biome_runestone.team.transfer_self=You are already the leader.
+message.biome_runestone.team.transfer_not_same_team=Target is not in your team.
+message.biome_runestone.team.transfer_failed=Transfer failed. Team state may have changed.
+message.biome_runestone.team.transfer_success=Leadership transferred to %s.
+message.biome_runestone.team.transfer_lock_migrated=Migrated player-runegate lock records: %s
+message.biome_runestone.team.transfer_notify=You are now the team leader (transferred by %s).
+message.biome_runestone.team.not_in_team=You are not in any team.
+message.biome_runestone.team.leader_cannot_leave=Team leader cannot leave. Use /biome_runestone_team disband.
+message.biome_runestone.team.leave_confirm_prompt=Confirm leave: /biome_runestone_team leave confirm
+message.biome_runestone.team.confirmation_expired=Confirmation expired or missing. Run %s first.
+message.biome_runestone.team.leave_failed=Leave failed. Team state may have changed.
+message.biome_runestone.team.left=You left the team.
+message.biome_runestone.team.disband_only_leader=Only the team leader can disband.
+message.biome_runestone.team.disband_confirm_prompt=Confirm disband: /biome_runestone_team disband confirm
+message.biome_runestone.team.disbanded=Team disbanded. Removed members=%s
+message.biome_runestone.team.info_none=Team: none
+message.biome_runestone.team.info_pending_invite=Pending invite from leader=%s
+message.biome_runestone.team.query_only_leader=Only the team leader can use query.
+message.biome_runestone.team.query_title=Leader query result:
+message.biome_runestone.team.info_role_leader=Team role: leader
+message.biome_runestone.team.info_members_count=Members: %s
+message.biome_runestone.team.info_member_list=Member list: %s
+message.biome_runestone.team.info_pending_invites_count=Pending invites: %s
+message.biome_runestone.team.info_pending_invites_list=Pending invite targets: %s
+message.biome_runestone.team.info_pending_online_invites_count=Pending online-activation invites: %s
+message.biome_runestone.team.info_role_member=Team role: member
+message.biome_runestone.team.info_leader=Leader: %s
+message.biome_runestone.team.team_broadcast_joined=Team notice: %s joined the team.
+message.biome_runestone.team.team_broadcast_kicked=Team notice: %s was kicked by %s.
+message.biome_runestone.team.team_broadcast_transfer=Team notice: leadership transferred from %s to %s.
+message.biome_runestone.team.team_broadcast_disband=Team notice: team was disbanded by %s.
+message.biome_runestone.team.offline_team_event_notify=You have %s offline team change notices. Use /biome_runestone_team info for current state.
