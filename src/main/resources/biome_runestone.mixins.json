@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "com.github.hahahha.BiomeRunestone.mixins",
+	"compatibilityLevel": "JAVA_17",
+	"target": "DEFAULT",
+	"minVersion": "0.8.3",
+	"mixins": [
+		"BlockPortalBiomeRunegateMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
+

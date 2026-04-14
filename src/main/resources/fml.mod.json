@@ -1,0 +1,20 @@
+{
+	"schemaVersion": 1,
+	"id": "biome_runestone",
+	"version": "${version}",
+	"depends": {
+		"fishmodloader": ">=3.4.2"
+	},
+	"environment": "*",
+	"name": "Biome Runestone",
+	"description": "",
+	"authors": ["hahahha"],
+	"entrypoints": {
+		"main": ["com.github.hahahha.BiomeRunestone.BiomeRunestone"]
+	},
+	"mixins": [
+		"biome_runestone.mixins.json"
+	],
+	"accessWidener": "biome_runestone.accesswidener"
+}
+
