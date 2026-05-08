@@ -6,7 +6,6 @@ import com.github.hahahha.BiomeRunestone.util.RunegatePlayerLockData;
 import com.github.hahahha.BiomeRunestone.util.RunegateRuntimeAccess;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchStatsData;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchTuning;
-import com.github.hahahha.BiomeRunestone.util.RunegateTeamData;
 import net.minecraft.Block;
 import net.minecraft.ChatMessageComponent;
 import net.minecraft.CommandBase;
@@ -60,15 +59,14 @@ public class CommandBiomeRunestoneRune extends CommandBase {
 
         RunegatePlayerLockData saveData = RunegatePlayerLockData.get(overworld);
         RunegateSearchStatsData statsData = RunegateSearchStatsData.get(overworld);
-        RunegateTeamData teamData = RunegateTeamData.get(overworld);
         String subCommand = args[0].toLowerCase(Locale.ROOT);
         if ("stats".equals(subCommand)) {
-            this.BiomeRunestone$sendStats(sender, saveData, statsData, teamData);
+            this.BiomeRunestone$sendStats(sender, saveData, statsData);
             return;
         }
 
         if ("diagnose".equals(subCommand)) {
-            this.BiomeRunestone$sendDiagnose(sender, saveData, statsData, teamData);
+            this.BiomeRunestone$sendDiagnose(sender, saveData, statsData);
             return;
         }
 
@@ -100,17 +98,10 @@ public class CommandBiomeRunestoneRune extends CommandBase {
             int lockCount = saveData.getPlayerLockCount();
             int usedCount = saveData.getTotalUsedDestinationCount();
             int persistedStatCount = statsData.clearAll();
-            int teamCount = teamData.getTeamCount();
-            int teamMemberCount = teamData.getMemberRecordCount();
-            int teamInviteCount = teamData.getInviteCount();
             saveData.clearAll();
-            teamData.clearAll();
             this.BiomeRunestone$sendLine(sender, "Cleared all persisted data: playerLocks=" + lockCount
                     + ", usedDestinations=" + usedCount
-                    + ", persistedEvents=" + persistedStatCount
-                    + ", teams=" + teamCount
-                    + ", teamMembers=" + teamMemberCount
-                    + ", teamInvites=" + teamInviteCount);
+                    + ", persistedEvents=" + persistedStatCount);
             return;
         }
 
@@ -150,17 +141,12 @@ public class CommandBiomeRunestoneRune extends CommandBase {
         return null;
     }
 
-    private void BiomeRunestone$sendStats(ICommandSender sender, RunegatePlayerLockData saveData, RunegateSearchStatsData statsData, RunegateTeamData teamData) {
+    private void BiomeRunestone$sendStats(ICommandSender sender, RunegatePlayerLockData saveData, RunegateSearchStatsData statsData) {
         RunegateRuntimeAccess runtimeAccess = this.BiomeRunestone$getRuntimeAccess();
         this.BiomeRunestone$sendLine(sender, "===== Biome Runestone RuneGate Stats =====");
         this.BiomeRunestone$sendLine(sender, "Persisted: playerLocks=" + saveData.getPlayerLockCount()
                 + ", usedGroups=" + saveData.getUsedGroupCount()
                 + ", usedEntries=" + saveData.getTotalUsedDestinationCount());
-        this.BiomeRunestone$sendLine(sender, "PersistedTeam: teams=" + teamData.getTeamCount()
-                + ", memberRecords=" + teamData.getMemberRecordCount()
-                + ", invites=" + teamData.getInviteCount()
-                + ", pendingOnlineStartInvites=" + teamData.getPendingOnlineInviteCount()
-                + ", inviteExpireSec=" + RunegateTeamData.getInviteExpireSeconds());
         this.BiomeRunestone$sendLine(sender, "PersistEventRandom: " + statsData.getRandomEventSummary());
         this.BiomeRunestone$sendLine(sender, "PersistEventPlayer: " + statsData.getPlayerEventSummary());
         if (runtimeAccess == null) {
@@ -195,7 +181,7 @@ public class CommandBiomeRunestoneRune extends CommandBase {
                 + ", usedPerGroupLimit=" + Config.getPlayerBiomeRunegateUsedHistoryPerGroupLimit());
     }
 
-    private void BiomeRunestone$sendDiagnose(ICommandSender sender, RunegatePlayerLockData saveData, RunegateSearchStatsData statsData, RunegateTeamData teamData) {
+    private void BiomeRunestone$sendDiagnose(ICommandSender sender, RunegatePlayerLockData saveData, RunegateSearchStatsData statsData) {
         RunegateRuntimeAccess runtimeAccess = this.BiomeRunestone$getRuntimeAccess();
         this.BiomeRunestone$sendLine(sender, "===== Biome Runestone RuneGate Diagnose =====");
         this.BiomeRunestone$sendLine(sender, "LandingRule: " + RunegateLandingRules.getRuleSummary());
@@ -206,11 +192,6 @@ public class CommandBiomeRunestoneRune extends CommandBase {
         this.BiomeRunestone$sendLine(sender, "Persisted: playerLocks=" + saveData.getPlayerLockCount()
                 + ", usedGroups=" + saveData.getUsedGroupCount()
                 + ", usedEntries=" + saveData.getTotalUsedDestinationCount());
-        this.BiomeRunestone$sendLine(sender, "PersistedTeam: teams=" + teamData.getTeamCount()
-                + ", memberRecords=" + teamData.getMemberRecordCount()
-                + ", invites=" + teamData.getInviteCount()
-                + ", pendingOnlineStartInvites=" + teamData.getPendingOnlineInviteCount()
-                + ", inviteExpireSec=" + RunegateTeamData.getInviteExpireSeconds());
         this.BiomeRunestone$sendLine(sender, "PersistEventRandom: " + statsData.getRandomEventSummary());
         this.BiomeRunestone$sendLine(sender, "PersistEventPlayer: " + statsData.getPlayerEventSummary());
 

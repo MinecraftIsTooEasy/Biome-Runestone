@@ -32,6 +32,7 @@ loom {
     runs {
         client {
             property "fml.modFolders", "rusted_iron_core=../RustedIronCore/build/libs/RustedIronCore-1.0.0.jar"
+            vmArgs "-Duser.language=en", "-Duser.country=US"
         }
     }
 }

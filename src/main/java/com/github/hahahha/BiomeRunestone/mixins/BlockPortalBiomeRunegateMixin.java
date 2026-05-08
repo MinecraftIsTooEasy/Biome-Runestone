@@ -5,12 +5,12 @@ import com.github.hahahha.BiomeRunestone.util.Config;
 import com.github.hahahha.BiomeRunestone.util.RandomDestinationSearchResult;
 import com.github.hahahha.BiomeRunestone.util.RandomXZSearchResult;
 import com.github.hahahha.BiomeRunestone.util.RunegateLandingRules;
+import com.github.hahahha.BiomeRunestone.util.RunegateExternalTeamCompat;
 import com.github.hahahha.BiomeRunestone.util.RunegatePlayerLockData;
 import com.github.hahahha.BiomeRunestone.util.RunegateRuntimeAccess;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchMetrics;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchStatsData;
 import com.github.hahahha.BiomeRunestone.util.RunegateSearchTuning;
-import com.github.hahahha.BiomeRunestone.util.RunegateTeamData;
 import net.minecraft.BiomeGenBase;
 import net.minecraft.Block;
 import net.minecraft.BlockPortal;
@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Locale;
 
 @Mixin(BlockPortal.class)
 public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAccess {
@@ -745,6 +746,7 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
         String name = player.getCommandSenderName();
         if (name != null && !name.isEmpty()) {
             candidates.add(name);
+            candidates.add(name.toLowerCase(Locale.ROOT));
         }
         UUID uuid = player.getUniqueIDSilent();
         if (uuid != null) {
@@ -754,23 +756,54 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
     }
 
     private String BiomeRunestone$getEffectivePlayerLockIdentity(WorldServer world, String playerIdentity, Set<String> playerIdentityCandidates) {
-        RunegateTeamData teamData = RunegateTeamData.get(world);
-        String teamLeaderIdentity = teamData.getTeamLeader(playerIdentity, playerIdentityCandidates);
-        if (teamLeaderIdentity == null || teamLeaderIdentity.isEmpty()) {
-            return playerIdentity;
+        String externalTeamLeaderIdentity = RunegateExternalTeamCompat.getLeaderIdentity(this.BiomeRunestone$getPlayerByIdentity(world, playerIdentity, playerIdentityCandidates));
+        if (externalTeamLeaderIdentity != null && !externalTeamLeaderIdentity.isEmpty()) {
+            return externalTeamLeaderIdentity;
         }
-        return teamLeaderIdentity;
+        return playerIdentity;
     }
 
     private Set<String> BiomeRunestone$getLockIdentityCandidates(String playerIdentity, Set<String> playerIdentityCandidates, String effectiveLockIdentity) {
         LinkedHashSet<String> candidates = new LinkedHashSet<String>();
         if (effectiveLockIdentity != null && !effectiveLockIdentity.isEmpty()) {
             candidates.add(effectiveLockIdentity);
+            candidates.add(effectiveLockIdentity.toLowerCase(Locale.ROOT));
         }
         if (effectiveLockIdentity != null && effectiveLockIdentity.equals(playerIdentity) && playerIdentityCandidates != null) {
             candidates.addAll(playerIdentityCandidates);
         }
         return candidates;
+    }
+
+    private ServerPlayer BiomeRunestone$getPlayerByIdentity(WorldServer world, String playerIdentity, Set<String> playerIdentityCandidates) {
+        if (world == null || world.playerEntities == null) {
+            return null;
+        }
+        for (Object obj : world.playerEntities) {
+            if (!(obj instanceof ServerPlayer)) {
+                continue;
+            }
+            ServerPlayer player = (ServerPlayer) obj;
+            String identity = this.BiomeRunestone$getPlayerIdentity(player);
+            if (playerIdentity != null && playerIdentity.equals(identity)) {
+                return player;
+            }
+
+            if (playerIdentityCandidates == null || playerIdentityCandidates.isEmpty()) {
+                continue;
+            }
+            String name = player.getCommandSenderName();
+            if (name != null && !name.isEmpty()) {
+                if (playerIdentityCandidates.contains(name) || playerIdentityCandidates.contains(name.toLowerCase(Locale.ROOT))) {
+                    return player;
+                }
+            }
+            UUID uuid = player.getUniqueIDSilent();
+            if (uuid != null && playerIdentityCandidates.contains(uuid.toString())) {
+                return player;
+            }
+        }
+        return null;
     }
 
     private Set<String> BiomeRunestone$getLegacyPlayerLockKeys(Set<String> legacyGroupKeys, Set<String> identityCandidates, String canonicalKey) {

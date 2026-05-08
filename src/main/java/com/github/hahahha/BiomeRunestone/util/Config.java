@@ -43,9 +43,6 @@ public class Config {
         int playerBiomeRunegateLockLimit = 8192;
         int playerBiomeRunegateGroupLimit = 64;
         int playerBiomeRunegateUsedHistoryPerGroupLimit = 8192;
-        int teamMaxMembers = 8;
-        int teamMaxPendingInvitesPerLeader = 16;
-        int teamInviteCooldownSeconds = 5;
     }
 
     public static void load() {
@@ -172,21 +169,6 @@ public class Config {
                 } else {
                     shouldRewrite = true;
                 }
-                if (json.has("teamMaxMembers")) {
-                    merged.teamMaxMembers = json.get("teamMaxMembers").getAsInt();
-                } else {
-                    shouldRewrite = true;
-                }
-                if (json.has("teamMaxPendingInvitesPerLeader")) {
-                    merged.teamMaxPendingInvitesPerLeader = json.get("teamMaxPendingInvitesPerLeader").getAsInt();
-                } else {
-                    shouldRewrite = true;
-                }
-                if (json.has("teamInviteCooldownSeconds")) {
-                    merged.teamInviteCooldownSeconds = json.get("teamInviteCooldownSeconds").getAsInt();
-                } else {
-                    shouldRewrite = true;
-                }
             }
 
             migrateToCurrentVersion(merged, loadedVersion);
@@ -255,18 +237,6 @@ public class Config {
                 configData.randomBiomeRunegateFailureCooldownSeconds = 8;
             }
         }
-        if (loadedVersion < 3) {
-            if (configData.teamMaxMembers <= 0) {
-                configData.teamMaxMembers = 8;
-            }
-            if (configData.teamMaxPendingInvitesPerLeader <= 0) {
-                configData.teamMaxPendingInvitesPerLeader = 16;
-            }
-            if (configData.teamInviteCooldownSeconds < 0) {
-                configData.teamInviteCooldownSeconds = 0;
-            }
-        }
-
         configData.configVersion = CURRENT_CONFIG_VERSION;
     }
 
@@ -472,37 +442,5 @@ public class Config {
         return Math.max(128, get().playerBiomeRunegateUsedHistoryPerGroupLimit);
     }
 
-    public static int getTeamMaxMembers() {
-        int maxMembers = get().teamMaxMembers;
-        if (maxMembers < 2) {
-            return 2;
-        }
-        if (maxMembers > 128) {
-            return 128;
-        }
-        return maxMembers;
-    }
-
-    public static int getTeamMaxPendingInvitesPerLeader() {
-        int maxPending = get().teamMaxPendingInvitesPerLeader;
-        if (maxPending < 1) {
-            return 1;
-        }
-        if (maxPending > 128) {
-            return 128;
-        }
-        return maxPending;
-    }
-
-    public static int getTeamInviteCooldownSeconds() {
-        int cooldownSeconds = get().teamInviteCooldownSeconds;
-        if (cooldownSeconds < 0) {
-            return 0;
-        }
-        if (cooldownSeconds > 300) {
-            return 300;
-        }
-        return cooldownSeconds;
-    }
 }
 

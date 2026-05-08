@@ -1,17 +1,24 @@
 package com.github.hahahha.BiomeRunestone.block;
 
+import com.github.hahahha.BiomeRunestone.BiomeRunestone;
 import net.minecraft.BlockRunestone;
 import net.minecraft.Icon;
+import net.minecraft.IconRegister;
 import net.minecraft.Material;
 import net.minecraft.Block;
 
 public class BlockBiomeRunestone extends BlockRunestone {
     private static final int MAGIC_SYMBOL_COUNT = 16;
+    private static final String TOP_TEXTURE_SUFFIX = "_top";
+    private static final String SIDE_TEXTURE_SUFFIX = "_side";
     private final int runeSymbolIndex;
     private final int targetBiomeId;
     private final String stableRunestoneKey;
     private final boolean randomDestinationMode;
     private final boolean playerLockedRandomMode;
+    private final String textureKeyName;
+    private Icon topFaceIcon;
+    private Icon sideFaceIcon;
 
     public BlockBiomeRunestone(int id, Material runeMetal, int runeSymbolIndex, int targetBiomeId, String unlocalizedName) {
         this(id, runeMetal, runeSymbolIndex, targetBiomeId, unlocalizedName, unlocalizedName, false, false);
@@ -32,6 +39,8 @@ public class BlockBiomeRunestone extends BlockRunestone {
         this.stableRunestoneKey = stableRunestoneKey == null || stableRunestoneKey.isEmpty() ? unlocalizedName : stableRunestoneKey;
         this.randomDestinationMode = randomDestinationMode;
         this.playerLockedRandomMode = playerLockedRandomMode;
+        this.textureKeyName = unlocalizedName;
+        this.setTextureName(BiomeRunestone.RESOURCE_DOMAIN + ":" + this.textureKeyName + TOP_TEXTURE_SUFFIX);
         this.setUnlocalizedName(unlocalizedName);
     }
 
@@ -68,7 +77,17 @@ public class BlockBiomeRunestone extends BlockRunestone {
     }
 
     @Override
+    public void registerIcons(IconRegister iconRegister) {
+        super.registerIcons(iconRegister);
+        this.topFaceIcon = iconRegister.registerIcon(BiomeRunestone.RESOURCE_DOMAIN + ":" + this.textureKeyName + TOP_TEXTURE_SUFFIX);
+        this.sideFaceIcon = iconRegister.registerIcon(BiomeRunestone.RESOURCE_DOMAIN + ":" + this.textureKeyName + SIDE_TEXTURE_SUFFIX);
+    }
+
+    @Override
     public Icon getIcon(int side, int metadata) {
+        if (this.topFaceIcon != null && this.sideFaceIcon != null) {
+            return side == 0 || side == 1 ? this.topFaceIcon : this.sideFaceIcon;
+        }
         return side == 0 || side == 1 ? this.blockIcon : this.iconArray[this.getRuneSymbolTextureIndex()];
     }
 

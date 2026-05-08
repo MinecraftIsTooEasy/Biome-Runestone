@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "biome_runestone",
+	"id": "biomerunestone",
 	"version": "${version}",
 	"depends": {
 		"fishmodloader": ">=3.4.2"
