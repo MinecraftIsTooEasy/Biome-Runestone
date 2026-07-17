@@ -355,19 +355,24 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
 
             Long expiresAt = RANDOM_DESTINATION_CACHE_EXPIRES_AT.get(portalKey);
             int[] cachedDestination = RANDOM_DESTINATION_CACHE.get(portalKey);
+            int[] reusableCachedDestination = null;
             if (cachedDestination != null && expiresAt != null && now < expiresAt.longValue()) {
                 this.BiomeRunestone$prepareChunksAroundDestination(world, cachedDestination[0], cachedDestination[2]);
             }
-            if (cachedDestination != null && expiresAt != null && now < expiresAt.longValue()
-                    && this.BiomeRunestone$isLandDestination(world, cachedDestination)) {
-                return new int[]{cachedDestination[0], cachedDestination[1], cachedDestination[2]};
+            if (cachedDestination != null && cachedDestination.length >= 3) {
+                reusableCachedDestination = new int[]{cachedDestination[0], cachedDestination[1], cachedDestination[2]};
+            }
+            if (reusableCachedDestination != null && expiresAt != null && now < expiresAt.longValue()) {
+                return new int[]{reusableCachedDestination[0], reusableCachedDestination[1], reusableCachedDestination[2]};
             }
 
             if (this.BiomeRunestone$isRandomFailureCooldownActive(portalKey, now)) {
+                if (reusableCachedDestination != null) {
+                    this.BiomeRunestone$recordSearchMetric(world, false, 0L, 0, "cooldown_cache");
+                    return new int[]{reusableCachedDestination[0], reusableCachedDestination[1], reusableCachedDestination[2]};
+                }
                 int[] nearestFallback = this.BiomeRunestone$findBiomeDestination(world, x, z, runestone.getRunestoneMaterial(), targetBiome);
                 if (nearestFallback != null) {
-                    RANDOM_DESTINATION_CACHE.put(portalKey, nearestFallback);
-                    RANDOM_DESTINATION_CACHE_EXPIRES_AT.put(portalKey, now + refreshMillis);
                     this.BiomeRunestone$recordSearchMetric(world, false, 0L, 0, "cooldown_nearest");
                     return new int[]{nearestFallback[0], nearestFallback[1], nearestFallback[2]};
                 }
@@ -393,11 +398,10 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
 
             int[] destination = searchResult.destination;
             if (destination == null) {
-                if (cachedDestination != null) {
+                if (reusableCachedDestination != null) {
                     this.BiomeRunestone$recordSearchMetric(world, false, elapsedNanos, searchResult.attempts, "fallback_cache");
                     this.BiomeRunestone$putRandomFailureCooldown(portalKey, now);
-                    RANDOM_DESTINATION_CACHE_EXPIRES_AT.put(portalKey, now + refreshMillis);
-                    return new int[]{cachedDestination[0], cachedDestination[1], cachedDestination[2]};
+                    return new int[]{reusableCachedDestination[0], reusableCachedDestination[1], reusableCachedDestination[2]};
                 }
 
                 int[] nearestFallback = this.BiomeRunestone$findBiomeDestination(world, x, z, runestone.getRunestoneMaterial(), targetBiome);
@@ -410,6 +414,7 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
                 destination = nearestFallback;
                 this.BiomeRunestone$recordSearchMetric(world, false, elapsedNanos, searchResult.attempts, "fallback_nearest");
                 this.BiomeRunestone$putRandomFailureCooldown(portalKey, now);
+                return new int[]{destination[0], destination[1], destination[2]};
             } else {
                 this.BiomeRunestone$recordSearchMetric(world, false, elapsedNanos, searchResult.attempts, "success");
                 RANDOM_DESTINATION_FAILURE_COOLDOWN_UNTIL.remove(portalKey);
@@ -480,39 +485,92 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
 
     private RandomDestinationSearchResult BiomeRunestone$findRandomBiomeDestination(WorldServer world, Material runestoneMaterial, BiomeGenBase targetBiome, Set<Long> usedDestinations, long lastPacked, long minDistanceSq, long deadlineNanos) {
         int maxRadius = world.getRunegateDomainRadius(runestoneMaterial);
+        int maxAttempts = Config.getRandomBiomeRunegateMaxAttempts();
         Random random = new Random(System.nanoTime() ^ (((long)targetBiome.biomeID) << 32) ^ maxRadius);
 
         if (this.BiomeRunestone$isSearchTimedOut(deadlineNanos)) {
             return new RandomDestinationSearchResult(null, 0, "timeout");
         }
 
-        RandomXZSearchResult candidateResult = this.BiomeRunestone$tryFindRandomBiomeXZ(world, targetBiome, maxRadius, random, usedDestinations, lastPacked, minDistanceSq, deadlineNanos);
-        if (candidateResult.xz == null) {
-            return new RandomDestinationSearchResult(null, candidateResult.attempts, candidateResult.failureReason);
+        int totalAttempts = 0;
+        int landRejected = 0;
+        String failureReason = "no_candidate";
+        LinkedHashSet<Long> transientRejectedDestinations = new LinkedHashSet<Long>();
+        while (totalAttempts < maxAttempts) {
+            int remainingAttempts = maxAttempts - totalAttempts;
+            RandomXZSearchResult candidateResult = this.BiomeRunestone$tryFindRandomBiomeXZ(
+                    world,
+                    targetBiome,
+                    maxRadius,
+                    random,
+                    usedDestinations,
+                    transientRejectedDestinations,
+                    lastPacked,
+                    minDistanceSq,
+                    deadlineNanos,
+                    remainingAttempts
+            );
+            totalAttempts += Math.max(0, candidateResult.attempts);
+            if (candidateResult.xz == null) {
+                failureReason = candidateResult.failureReason;
+                break;
+            }
+
+            int[] landDestination = this.BiomeRunestone$resolveLandDestination(
+                    world,
+                    candidateResult.xz[0],
+                    candidateResult.xz[1],
+                    targetBiome,
+                    RunegateSearchTuning.getLandSearchSameBiomeRadius(),
+                    RunegateSearchTuning.getLandSearchAnyBiomeRadius(),
+                    deadlineNanos
+            );
+            if (landDestination != null) {
+                return new RandomDestinationSearchResult(landDestination, totalAttempts, null);
+            }
+            if (this.BiomeRunestone$isSearchTimedOut(deadlineNanos)) {
+                return new RandomDestinationSearchResult(null, totalAttempts, "timeout");
+            }
+
+            transientRejectedDestinations.add(Long.valueOf(this.BiomeRunestone$packXZ(candidateResult.xz[0], candidateResult.xz[1])));
+            ++landRejected;
+            failureReason = "land_not_found";
         }
 
-        int[] landDestination = this.BiomeRunestone$resolveLandDestination(
-                world,
-                candidateResult.xz[0],
-                candidateResult.xz[1],
-                targetBiome,
-                RunegateSearchTuning.getLandSearchSameBiomeRadius(),
-                RunegateSearchTuning.getLandSearchAnyBiomeRadius(),
-                deadlineNanos
-        );
-        if (landDestination == null) {
-            if (this.BiomeRunestone$isSearchTimedOut(deadlineNanos)) {
-                return new RandomDestinationSearchResult(null, candidateResult.attempts, "timeout");
-            }
-            return new RandomDestinationSearchResult(null, candidateResult.attempts, "land_not_found");
+        if (landRejected > 0 && !"timeout".equals(failureReason)) {
+            failureReason = "land_not_found";
         }
-        return new RandomDestinationSearchResult(landDestination, candidateResult.attempts, null);
+        if (minDistanceSq > 0L && !"timeout".equals(failureReason)) {
+            RandomDestinationSearchResult relaxedResult = this.BiomeRunestone$findRandomBiomeDestination(
+                    world,
+                    runestoneMaterial,
+                    targetBiome,
+                    usedDestinations,
+                    Long.MIN_VALUE,
+                    0L,
+                    deadlineNanos
+            );
+            if (relaxedResult.destination != null) {
+                return new RandomDestinationSearchResult(
+                        relaxedResult.destination,
+                        totalAttempts + Math.max(0, relaxedResult.attempts),
+                        null
+                );
+            }
+            totalAttempts += Math.max(0, relaxedResult.attempts);
+            if (relaxedResult.failureReason != null && !relaxedResult.failureReason.isEmpty()) {
+                failureReason = relaxedResult.failureReason;
+            }
+        }
+        return new RandomDestinationSearchResult(null, totalAttempts, failureReason);
     }
 
-    private RandomXZSearchResult BiomeRunestone$tryFindRandomBiomeXZ(WorldServer world, BiomeGenBase targetBiome, int maxRadius, Random random, Set<Long> usedDestinations, long lastPacked, long minDistanceSq, long deadlineNanos) {
+    private RandomXZSearchResult BiomeRunestone$tryFindRandomBiomeXZ(WorldServer world, BiomeGenBase targetBiome, int maxRadius, Random random, Set<Long> usedDestinations, Set<Long> transientRejectedDestinations, long lastPacked, long minDistanceSq, long deadlineNanos, int maxAttempts) {
         int bound = maxRadius * 2 + 1;
-        int maxAttempts = Config.getRandomBiomeRunegateMaxAttempts();
-        int stageOneAttempts = Math.max(4, maxAttempts / 4);
+        if (maxAttempts <= 0) {
+            return new RandomXZSearchResult(null, 0, "no_candidate");
+        }
+        int stageOneAttempts = Math.min(maxAttempts, Math.max(4, maxAttempts / 4));
         List<BiomeGenBase> targetBiomes = Collections.singletonList(targetBiome);
         int attempts = 0;
         int biomeRejected = 0;
@@ -549,7 +607,7 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
                 ++domainRejected;
                 continue;
             }
-            int rejectCode = this.BiomeRunestone$getRandomBiomeCandidateRejectCode(candidateX, candidateZ, usedDestinations, lastPacked, minDistanceSq);
+            int rejectCode = this.BiomeRunestone$getRandomBiomeCandidateRejectCode(candidateX, candidateZ, usedDestinations, transientRejectedDestinations, lastPacked, minDistanceSq);
             if (rejectCode == 0) {
                 return new RandomXZSearchResult(new int[]{candidateX, candidateZ}, attempts, null);
             } else if (rejectCode == 1) {
@@ -573,7 +631,7 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
                     ++biomeRejected;
                     continue;
                 }
-                int jitterRejectCode = this.BiomeRunestone$getRandomBiomeCandidateRejectCode(jitterX, jitterZ, usedDestinations, lastPacked, minDistanceSq);
+                int jitterRejectCode = this.BiomeRunestone$getRandomBiomeCandidateRejectCode(jitterX, jitterZ, usedDestinations, transientRejectedDestinations, lastPacked, minDistanceSq);
                 if (jitterRejectCode == 0) {
                     return new RandomXZSearchResult(new int[]{jitterX, jitterZ}, attempts, null);
                 } else if (jitterRejectCode == 1) {
@@ -597,7 +655,7 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
                 continue;
             }
 
-            int rejectCode = this.BiomeRunestone$getRandomBiomeCandidateRejectCode(x, z, usedDestinations, lastPacked, minDistanceSq);
+            int rejectCode = this.BiomeRunestone$getRandomBiomeCandidateRejectCode(x, z, usedDestinations, transientRejectedDestinations, lastPacked, minDistanceSq);
             if (rejectCode == 0) {
                 return new RandomXZSearchResult(new int[]{x, z}, attempts, null);
             } else if (rejectCode == 1) {
@@ -622,9 +680,10 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
         return new RandomXZSearchResult(null, attempts, failureReason);
     }
 
-    private int BiomeRunestone$getRandomBiomeCandidateRejectCode(int x, int z, Set<Long> usedDestinations, long lastPacked, long minDistanceSq) {
+    private int BiomeRunestone$getRandomBiomeCandidateRejectCode(int x, int z, Set<Long> usedDestinations, Set<Long> transientRejectedDestinations, long lastPacked, long minDistanceSq) {
         long packed = this.BiomeRunestone$packXZ(x, z);
-        if (usedDestinations.contains(packed)) {
+        if (usedDestinations.contains(Long.valueOf(packed))
+                || transientRejectedDestinations != null && transientRejectedDestinations.contains(Long.valueOf(packed))) {
             return 1;
         }
         if (lastPacked != Long.MIN_VALUE && !this.BiomeRunestone$isFarEnoughFromLastDestination(x, z, lastPacked, minDistanceSq)) {
@@ -676,7 +735,7 @@ public abstract class BlockPortalBiomeRunegateMixin implements RunegateRuntimeAc
     }
 
     private long BiomeRunestone$getRandomSearchDeadlineNanos() {
-        long budgetMillis = Config.getRandomBiomeRunegateMaxSearchTimeMs();
+        long budgetMillis = Math.max(500L, Config.getRandomBiomeRunegateMaxSearchTimeMs());
         return System.nanoTime() + budgetMillis * 1000000L;
     }
 
